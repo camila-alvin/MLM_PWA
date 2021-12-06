@@ -1,54 +1,60 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.0.0/workbox-sw.js");
 
 if (workbox) {
-	console.log("Ajua! Workbox está cargado! :) ");
-	workbox.precaching.precacheAndRoute([]);
+    console.log("Ajua! Workbox está cargado! :) ");
+    workbox.precaching.precacheAndRoute([]);
 
-	/*Cache de imagenes en la carpeta por ejemplo "others", editamos a otras carpetas que se obtuvieron y configuramos en el archivo sw.js */
-	workbox.routing.registerRoute(
-		/(.*)others(.*)\.(?:png|gif|jpg)/,
-		new workbox.strategies.CacheFirst({
-			cacheName: "images",
-			plugins: [
-				new workbox.expiration.Plugin({
-					maxEntries: 50,
-					maxAgeSeconds: 30 * 24 * 60 * 60,
-				})
-			]
-		})
-	);
+    /*  cache images in the e.g others folder; edit to other folders you got
+    and config in the sw-config.js file
+    */
+    workbox.routing.registerRoute(
+        /(.*)others(.*)\.(?:png|gif|jpg)/,
+        new workbox.strategies.CacheFirst({
+            cacheName: "images",
+            plugins: [
+                new workbox.expiration.Plugin({
+                    maxEntries: 50,
+                    maxAgeSeconds: 30 * 24 * 60 * 60, // 30 Days
+                })
+            ]
+        })
+    );
+    /* Make your JS and CSS âš¡ fast by returning the assets from the cache,
+     while making sure they are updated in the background for the next use.
+    */
+    workbox.routing.registerRoute(
+    // cache js, css, scc files
+        /.*\.(?:css|js|scss|)/,
+        // use cache but update in the background ASAP
+        new workbox.strategies.StaleWhileRevalidate({
+            // use a custom cache name
+            cacheName: "assets",
+        })
+    );
 
-	/* Hacemos que el contenido JS, CSS, SCSS sean rapidos devolviendo los "assets" de la cache, mientras se asegura de que se actualizan en segundo plano para su proximo uso.*/
-	workbox.routing.registerRoute(
-		//Cache de JS; CSS y SCSS
-		/.*\.(?:css|js|scss|)/,
-			//Usamos el cache temporal y actualizamos en segundo planos los nuevos cambios, lo antes posible,
-			new workbox.strategies.StaleWhileRevalidate({
-				//Usamos el nombre de un cache personalizado.
-				cacheName: "assets",
-			})
-		);
+    // cache google fonts
+    workbox.routing.registerRoute(
+        new RegExp("https://fonts.(?:googleapis|gstatic).com/(.*)"),
+        new workbox.strategies.CacheFirst({
+            cacheName: "google-fonts",
+            plugins: [
+                new workbox.cacheableResponse.Plugin({
+                    statuses: [0, 200],
+                }),
+            ],
+        })
+    );
 
-	//Cache de fuentes de Google
-	workbox.routing.registerRoute(
-		new RegExp("https://fonts.(?:googleapis|gstatic).com/(.*)"),
-		new workbox.strategies.CacheFirst({
-			cacheName: "google-fonts",
-			plugins: [
-				new workbox.cacheableResponse.Plugin({
-					statuses: [0,200],
-				}),
-			],
-		})
-	);
+    // add offline analytics
+    workbox.googleAnalytics.initialize();
 
-	//Agregar un analisis offline
-	workbox.googleAnalytics.initialize();
+    /* Install a new service worker and have it update
+   and control a web page as soon as possible
+    */
 
-	/* Instalar un nuevo service worker y hacer que actualice y controle la pagina web lo antes posible */
-	workbox.core.skipWaiting();
-	workbox.core.clientsClaim();
+    workbox.core.skipWaiting();
+    workbox.core.clientsClaim();
 
 } else {
-	console.log("¡Fallo! Workbox no está cargado! ): ");
+    console.log("¡Falló! Workbox no está cargado! ): ");
 }
